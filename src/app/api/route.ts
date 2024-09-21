@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     console.error(error);
   }
 
-  return Response.json({ res });
+  return Response.json({ commitPromises });
 }
 
 async function fetchCommitDetails(
