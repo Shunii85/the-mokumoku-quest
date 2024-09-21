@@ -8,14 +8,15 @@ export async function POST(request: Request) {
     fetchCommitDetails(commit.id, owner, repo)
   );
 
+  console.log("Fetching commit details...");
+
   try {
     const commitDetails = (await Promise.all(commitPromises)) as any[];
     console.table(commitDetails);
+    return Response.json(commitDetails);
   } catch (error) {
     console.error(error);
   }
-
-  return Response.json({ commitPromises });
 }
 
 async function fetchCommitDetails(
