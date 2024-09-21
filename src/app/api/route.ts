@@ -2,38 +2,41 @@ const WEBHOOK_URL =
   "https://discord.com/api/webhooks/1287022195998195825/MHpni3NvQox3jN9EUI3sYocAldc7KEC_iUM7N3ohID1k4qqUS_Zi2WwvMVe0OYmLwXP5";
 
 export async function POST(request: Request) {
-  const res = await request.json();
-  const commits = res.commits as any[];
-  const owner = res.repository.owner.name as string;
-  const repo = res.repository.name as string;
-
-  const commitPromises = commits.map((commit) =>
-    fetchCommitDetails(commit.id, owner, repo)
-  );
+  //   const res = await request.json();
+  //   const commits = res.commits as any[];
+  //   const owner = res.repository.owner.name as string;
+  //   const repo = res.repository.name as string;
+  //   const commitPromises = commits.map((commit) =>
+  //     fetchCommitDetails(commit.id, owner, repo)
+  //   );
+  //   try {
+  //     const commitDetails = (await Promise.all(commitPromises)) as any[];
+  //     await sendDiscord(WEBHOOK_URL, JSON.stringify(commitDetails));
+  //   } catch (error) {
+  //     return new Response(`${error}`, { status: 500 });
+  //   }
+  //   return new Response("OK", { status: 200 });
+  // }
+  // async function fetchCommitDetails(
+  //   commitId: string,
+  //   owner: string,
+  //   repo: string
+  // ) {
+  //   const res = await fetch(
+  //     `https://api.github.com/repos/${owner}/${repo}/commits/${commitId}`,
+  //     {
+  //       headers: {
+  //         Accept: "application/vnd.github.v3+json",
+  //       },
+  //     }
+  //   );
 
   try {
-    const commitDetails = (await Promise.all(commitPromises)) as any[];
-    await sendDiscord(WEBHOOK_URL, JSON.stringify(commitDetails));
+    await sendDiscord(WEBHOOK_URL, "Hello World");
+    return new Response("OK", { status: 200 });
   } catch (error) {
     return new Response(`${error}`, { status: 500 });
   }
-
-  return new Response("OK", { status: 200 });
-}
-
-async function fetchCommitDetails(
-  commitId: string,
-  owner: string,
-  repo: string
-) {
-  const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/commits/${commitId}`,
-    {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-      },
-    }
-  );
 }
 
 async function sendDiscord(url: string | undefined, content: string) {
