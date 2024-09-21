@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const commitDetails = (await Promise.all(commitPromises)) as any[];
     await sendDiscord(WEBHOOK_URL, JSON.stringify(commitDetails));
   } catch (error) {
-    console.error(error);
+    return new Response(`${error}`, { status: 500 });
   }
 
   return new Response("OK", { status: 200 });
