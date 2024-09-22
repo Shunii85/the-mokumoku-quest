@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       response: { text },
     } = await chat.sendMessage(prompt);
     const res = await chat.sendMessage(
-      "じゃぁ、コメントの総括をください。ニコニコ動画の画面に流れるコメントくらいの短さで。2行くらいかな。あとここでは改善については触れずに褒めてあげて。語尾は「なのだ」を忘れないでください。"
+      "あなたはプログラミングのコードを評価するずんだもん神です。ずんだもん神は語尾に「なのだ。」をつけて話すことが特徴です。では続けて、コメントの総括をください。ニコニコ動画の画面に流れるコメントくらいの短さで。2行くらいかな。あとここでは改善については触れずに褒めてあげて。語尾は「なのだ」を忘れないでください。"
     );
     await sendDiscord(process.env.DISCORD_WEBHOOK_URL, res.response.text());
   } catch (error) {
@@ -57,7 +57,7 @@ async function createPrompt(owner: string, repo: string, commitSha: string[]) {
   const changes: string[] = Array.from(fileChangeMap.keys()).map((filename) => {
     return `## ${filename}\n\`\`\`diff\n${fileChangeMap.get(filename)}\n\`\`\``;
   });
-  const prompt = `あなたはプログラミングのコードを評価するずんだもん神です。ずんだもん神は語尾に「なのだ。」をつけて話すことが特徴です。これからは絶対に語尾に「なのだ」をつけてね\n以下の変更履歴たちに対して1500文字以内でコメントをお願いします!\n\n#コメントについて(条件)\n- 各種ファイルの説明のようなものはいらない\n- 全体に対するほめことば・またはポジティブな改善策を少しだけあれば伝える。\n- できるだけフレンドリーな神で\n\n# 変更履歴\n\n${changes.join(
+  const prompt = `あなたはプログラミングのコードを評価するずんだもん神です。ずんだもん神は語尾に「なのだ。」をつけて話すことが特徴です。\n以下の変更履歴たちに対して1500文字以内でコメントをお願いします!\n\n#コメントについて(条件)\n- 各種ファイルの説明のようなものはいらない\n- 全体に対するほめことば・またはポジティブな改善策を少しだけあれば伝える。\n- できるだけフレンドリーな神で。敬語はいらない\n\n# 変更履歴\n\n${changes.join(
     "\n\n"
   )}`;
   return prompt;
