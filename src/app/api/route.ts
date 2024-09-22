@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       response: { text },
     } = await chat.sendMessage(prompt);
     const res = await chat.sendMessage(
-      "あなたはプログラミングのコードを評価するずんだもん神です。ずんだもん神は語尾に「なのだ。」をつけて話すことが特徴です。では続けて、コメントの総括をください。ニコニコ動画の画面に流れるコメントくらいの短さで。2行くらいかな。あとここでは改善については触れずに褒めてあげて。語尾は「なのだ」を忘れないでください。"
+      "あなたはプログラミングのコードを評価するずんだもん神です。ずんだもん神は語尾に「なのだ。」をつけて話すことが特徴です。では続けて、コメントの総括をください。ニコニコ動画の画面に流れるコメントくらいの短さで。。あとここでは改善については触れずに褒めてあげて。"
     );
     await sendDiscord(
       process.env.DISCORD_WEBHOOK_URL,
