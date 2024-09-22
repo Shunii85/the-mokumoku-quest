@@ -1,46 +1,71 @@
-const WEBHOOK_URL =
-  "https://discord.com/api/webhooks/1287022195998195825/MHpni3NvQox3jN9EUI3sYocAldc7KEC_iUM7N3ohID1k4qqUS_Zi2WwvMVe0OYmLwXP5";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Octokit } from "@octokit/rest";
+
+const octokit = new Octokit({
+  auth: process.env.MY_GITHUB_TOKEN,
+});
+
+// gemini api init
+const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
+const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export async function POST(request: Request) {
-  //   const res = await request.json();
-  //   const commits = res.commits as any[];
-  //   const owner = res.repository.owner.name as string;
-  //   const repo = res.repository.name as string;
-  //   const commitPromises = commits.map((commit) =>
-  //     fetchCommitDetails(commit.id, owner, repo)
-  //   );
-  //   try {
-  //     const commitDetails = (await Promise.all(commitPromises)) as any[];
-  //     await sendDiscord(WEBHOOK_URL, JSON.stringify(commitDetails));
-  //   } catch (error) {
-  //     return new Response(`${error}`, { status: 500 });
-  //   }
-  //   return new Response("OK", { status: 200 });
-  // }
-  // async function fetchCommitDetails(
-  //   commitId: string,
-  //   owner: string,
-  //   repo: string
-  // ) {
-  //   const res = await fetch(
-  //     `https://api.github.com/repos/${owner}/${repo}/commits/${commitId}`,
-  //     {
-  //       headers: {
-  //         Accept: "application/vnd.github.v3+json",
-  //       },
-  //     }
-  //   );
+  const res = await request.json();
+  const commits = res.commits as any[];
+  const owner = res.repository.owner.name as string;
+  const repo = res.repository.name as string;
+  const commitIdList = commits.map((commit) => commit.id);
 
   try {
-    await sendDiscord(WEBHOOK_URL, "Hello World");
-    return new Response("OK", { status: 200 });
+    const prompt = await createPrompt(owner, repo, commitIdList);
+    const chat = model.startChat();
+
+    const {
+      response: { text },
+    } = await chat.sendMessage(prompt);
+    const res = await chat.sendMessage(
+      "じゃぁ、コメントの総括をください。ニコニコ動画の画面に流れるコメントくらいの短さで。2行くらいかな。あとここでは改善については触れずに褒めてあげて。語尾は「なのだ」を忘れないでください。"
+    );
+    await sendDiscord(process.env.DISCORD_WEBHOOK_URL, res.response.text());
   } catch (error) {
     return new Response(`${error}`, { status: 500 });
   }
+  return new Response("OK", { status: 200 });
+}
+
+async function createPrompt(owner: string, repo: string, commitSha: string[]) {
+  const fileChangeMap = new Map<string, string>();
+
+  for (const sha of commitSha) {
+    try {
+      const { data: commit } = await octokit.repos.getCommit({
+        owner,
+        repo,
+        ref: sha,
+      });
+
+      for (const file of commit.files || []) {
+        const { filename, patch } = file;
+
+        fileChangeMap.set(filename, patch ?? "");
+      }
+    } catch (error) {
+      throw new Error(`Failed to fetch commit details: ${error}`);
+    }
+  }
+
+  const changes: string[] = Array.from(fileChangeMap.keys()).map((filename) => {
+    return `## ${filename}\n\`\`\`diff\n${fileChangeMap.get(filename)}\n\`\`\``;
+  });
+  const prompt = `あなたはプログラミングのコードを評価するずんだもん神です。ずんだもん神は語尾に「なのだ。」をつけて話すことが特徴です。\n以下の変更履歴たちに対して1500文字以内でコメントをお願いします!\n\n#コメントについて(条件)\n- 各種ファイルの説明のようなものはいらない\n- 全体に対するほめことば・またはポジティブな改善策を少しだけあれば伝える。\n- できるだけフレンドリーな神で\n\n# 変更履歴\n\n${changes.join(
+    "\n\n"
+  )}`;
+  return prompt;
 }
 
 async function sendDiscord(url: string | undefined, content: string) {
   if (!url) throw new Error("Discord webhook URL is not provided");
+  if (content.length > 2000) throw new Error("Content is too long\n");
 
   const data = {
     username: "GitHub",
