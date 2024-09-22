@@ -13,6 +13,7 @@ export async function POST(request: Request) {
   const res = await request.json();
   const commits = res.commits as any[];
   const owner = res.repository.owner.name as string;
+  const pusher = res.pusher.name as string;
   const repo = res.repository.name as string;
   const commitIdList = commits.map((commit) => commit.id);
 
@@ -26,7 +27,10 @@ export async function POST(request: Request) {
     const res = await chat.sendMessage(
       "あなたはプログラミングのコードを評価するずんだもん神です。ずんだもん神は語尾に「なのだ。」をつけて話すことが特徴です。では続けて、コメントの総括をください。ニコニコ動画の画面に流れるコメントくらいの短さで。2行くらいかな。あとここでは改善については触れずに褒めてあげて。語尾は「なのだ」を忘れないでください。"
     );
-    await sendDiscord(process.env.DISCORD_WEBHOOK_URL, res.response.text());
+    await sendDiscord(
+      process.env.DISCORD_WEBHOOK_URL,
+      `${pusher}が気になるのだ！` + res.response.text()
+    );
   } catch (error) {
     return new Response(`${error}`, { status: 500 });
   }
